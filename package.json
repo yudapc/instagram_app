@@ -1,17 +1,16 @@
 {
-  "name": "instagram",
+  "name": "Instagram App",
   "version": "1.0.0",
-  "description": "",
+  "description": "Instagram App",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "yudapc@gmail.com",
   "license": "ISC",
   "dependencies": {
     "client-oauth2": "^4.1.0",
     "express": "^4.16.2",
-    "express-session": "^1.15.6",
-    "simple-oauth2": "^1.5.0"
+    "express-session": "^1.15.6"
   }
 }
