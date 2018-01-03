@@ -1,5 +1,6 @@
 const express = require('express');
-const oauth2 = require('simple-oauth2').create(credentials);
+const session = require('express-session');
+const request = require('request');
 const app = express();
 
 const credentials = {
@@ -14,10 +15,16 @@ const credentials = {
   }
 };
 
+const oauth2 = require('simple-oauth2').create(credentials);
+
 const authorizationUri = oauth2.authorizationCode.authorizeURL({
   redirect_uri: 'http://localhost:3000/auth',
   response_type: 'code',
+  scope: ['users', 'relationships', 'media', 'comments', 'likes', 'follower_list', 'public_content'],
+  state: 'a state',
 });
+
+app.use(session({secret: "zzz, ini rahasia bang9et!"}));
 
 app.get('/', (req, res) => {
   res.redirect(authorizationUri);
@@ -38,11 +45,75 @@ app.get('/auth', (req, res) => {
     }
 
     console.log('The resulting token: ', result);
-    const token = oauth2.accessToken.create(result);
+    req.session.accessToken = result.access_token;
+    req.session.userId = result.user.id;
 
     return res
       .status(200)
-      .json(token);
+      .json({ success: true });
+  });
+
+  app.get('/status', (req, res) => {
+    console.log('session: ', req.session.accessToken);
+    res.send('access_token = ' + req.session.accessToken);
+  });
+
+  app.get('/profile', (req, res) => {
+    const access_token = req.session.accessToken;
+    const uri = 'https://api.instagram.com/v1/users/self';
+    request({
+      uri,
+      qs: {
+        access_token,
+      }
+    }).pipe(res);
+  });
+
+  app.get('/media', (req, res) => {
+    const access_token = req.session.accessToken;
+    const userId = req.session.userId;
+    const uri = `https://api.instagram.com/v1/users/${userId}/media/recent/`;
+    request({
+      uri,
+      qs: {
+        access_token,
+      }
+    }).pipe(res);
+  });
+
+  app.get('/follower', (req, res) => {
+    const access_token = req.session.accessToken;
+    const uri = 'https://api.instagram.com/v1/users/self/followed-by';
+    request({
+      uri,
+      qs: {
+        access_token,
+      }
+    }).pipe(res);
+  });
+
+  app.get('/following', (req, res) => {
+    const access_token = req.session.accessToken;
+    const uri = 'https://api.instagram.com/v1/users/self/follows';
+    request({
+      uri,
+      qs: {
+        access_token,
+      }
+    }).pipe(res);
+  });
+
+  app.get('/tag/:tag', (req, res) => {
+    const access_token = req.session.accessToken;
+    const userId = req.session.userId;
+    const tag = req.params.tag;
+    const uri = `https://api.instagram.com/v1/tags/${tag}/media/recent`;
+    request({
+      uri,
+      qs: {
+        access_token,
+      }
+    }).pipe(res);
   });
 });
 
